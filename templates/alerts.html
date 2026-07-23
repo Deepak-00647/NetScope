@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Alerts{% endblock %}
+{% block content %}
+<div class="ns-page-header"><h1><i class="fa-solid fa-triangle-exclamation"></i> Threat Alerts</h1></div>
+<div class="ns-card ns-controls">
+  <select id="f-severity" class="form-select w-auto d-inline-block">
+    <option value="ALL">All Severities</option>
+    <option value="Critical">Critical</option>
+    <option value="High">High</option>
+    <option value="Medium">Medium</option>
+    <option value="Low">Low</option>
+  </select>
+</div>
+<div class="ns-card">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover ns-table">
+      <thead><tr><th>Time</th><th>Type</th><th>Severity</th><th>Source IP</th><th>Description</th></tr></thead>
+      <tbody id="alerts-table-body"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endblock %}

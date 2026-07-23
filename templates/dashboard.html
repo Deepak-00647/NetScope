@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="ns-page-header">
+  <h1><i class="fa-solid fa-gauge-high"></i> Live Dashboard</h1>
+  <div id="capture-status-badge" class="ns-status-badge status-stopped">STOPPED</div>
+</div>
+
+<div class="ns-card ns-controls">
+  <div class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label">Network Interface</label>
+      <select id="interface-select" class="form-select">
+        {% for iface in interfaces %}
+          <option value="{{ iface }}">{{ iface }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-8 d-flex gap-2">
+      <button id="btn-start" class="btn btn-success"><i class="fa-solid fa-play"></i> Start</button>
+      <button id="btn-pause" class="btn btn-warning" disabled><i class="fa-solid fa-pause"></i> Pause</button>
+      <button id="btn-resume" class="btn btn-info" disabled><i class="fa-solid fa-play"></i> Resume</button>
+      <button id="btn-stop" class="btn btn-danger" disabled><i class="fa-solid fa-stop"></i> Stop</button>
+      <div class="ms-auto text-secondary small align-self-center" id="capture-meta"></div>
+    </div>
+  </div>
+  <div id="capture-error" class="alert alert-danger mt-3 d-none"></div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-6 col-lg-3"><div class="ns-card ns-stat"><div class="ns-stat-label">Total Packets</div><div class="ns-stat-value" id="stat-total">0</div></div></div>
+  <div class="col-6 col-lg-3"><div class="ns-card ns-stat"><div class="ns-stat-label">Packets / sec</div><div class="ns-stat-value" id="stat-pps">0</div></div></div>
+  <div class="col-6 col-lg-3"><div class="ns-card ns-stat"><div class="ns-stat-label">Avg Packet Size</div><div class="ns-stat-value" id="stat-avgsize">0</div></div></div>
+  <div class="col-6 col-lg-3"><div class="ns-card ns-stat"><div class="ns-stat-label">Bandwidth</div><div class="ns-stat-value" id="stat-bandwidth">0 B</div></div></div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-lg-6">
+    <div class="ns-card">
+      <h5><i class="fa-solid fa-chart-line"></i> Packet Rate</h5>
+      <canvas id="chart-rate" height="180"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-3">
+    <div class="ns-card">
+      <h5><i class="fa-solid fa-chart-pie"></i> Protocol Distribution</h5>
+      <canvas id="chart-protocol" height="180"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-3">
+    <div class="ns-card">
+      <h5><i class="fa-solid fa-chart-bar"></i> Top Source IPs</h5>
+      <canvas id="chart-topips" height="180"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1 mb-4">
+  <div class="col-lg-6">
+    <div class="ns-card">
+      <h5><i class="fa-solid fa-triangle-exclamation"></i> Recent Alerts</h5>
+      <div id="recent-alerts" class="ns-alert-list"></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="ns-card">
+      <h5><i class="fa-solid fa-plug"></i> Top Destination Ports</h5>
+      <div id="top-ports-list" class="ns-mini-list"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

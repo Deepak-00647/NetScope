@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}NetScope{% endblock %} | NetScope</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<div class="ns-shell">
+  <nav class="ns-sidebar">
+    <div class="ns-brand">
+      <i class="fa-solid fa-satellite-dish"></i>
+      <span>NetScope</span>
+    </div>
+    <ul class="ns-nav">
+      <li><a href="{{ url_for('dashboard.index') }}" class="{{ 'active' if request.endpoint=='dashboard.index' }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('dashboard.packets') }}" class="{{ 'active' if request.endpoint=='dashboard.packets' }}"><i class="fa-solid fa-network-wired"></i> Packets</a></li>
+      <li><a href="{{ url_for('dashboard.alerts') }}" class="{{ 'active' if request.endpoint=='dashboard.alerts' }}"><i class="fa-solid fa-triangle-exclamation"></i> Alerts</a></li>
+      <li><a href="{{ url_for('dashboard.reports') }}" class="{{ 'active' if request.endpoint=='dashboard.reports' }}"><i class="fa-solid fa-file-pdf"></i> Reports</a></li>
+    </ul>
+    <div class="ns-sidebar-footer">
+      <div class="ns-user"><i class="fa-solid fa-user-shield"></i> {{ current_user.username }} <span class="badge text-bg-secondary">{{ current_user.role }}</span></div>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger w-100 mt-2"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+  </nav>
+  <main class="ns-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="ns-flash">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+  window.NETSCOPE_CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
