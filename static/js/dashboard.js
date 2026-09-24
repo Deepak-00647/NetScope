@@ -74,19 +74,79 @@ function initCharts() {
         type: "bar",
         data: {
           labels: [],
-          datasets: [{ label: "Packets", data: [], backgroundColor: "#4d96ff" }],
+          datasets: [{
+            label: "Packets",
+            data: [],
+            backgroundColor: "#4d96ff",
+            borderRadius: 4,
+            borderSkipped: false,
+            barThickness: 16,
+            maxBarThickness: 18,
+          }],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
           indexAxis: "y",
-          plugins: { legend: { display: false } },
+          layout: {
+            padding: { left: 2, right: 12, top: 4, bottom: 4 },
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: items => items.length ? String(items[0].label || "N/A") : "",
+                label: item => ` ${Number(item.raw || 0).toLocaleString()} packets`,
+              },
+            },
+          },
           scales: {
-            x: { grid: { color: gridColor }, beginAtZero: true },
-            y: { grid: { display: false } },
+            x: {
+              beginAtZero: true,
+              grid: { display: false },
+              border: { display: false },
+              ticks: { display: false },
+            },
+            y: {
+              grid: { display: false },
+              border: { display: false },
+              ticks: {
+                color: "#d7e2ec",
+                padding: 8,
+                font: { size: 11 },
+                autoSkip: false,
+                maxTicksLimit: 7,
+                callback: value => {
+                  const label = String(topIpChart?.data?.labels?.[value] || "N/A");
+                  return label.length > 15 ? `${label.slice(0, 14)}…` : label;
+                },
+              },
+            },
           },
         },
+        plugins: [{
+          id: "topIpValues",
+          afterDatasetsDraw(chart) {
+            const { ctx, chartArea } = chart;
+            const dataset = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !dataset || !meta.data.length) return;
+
+            ctx.save();
+            ctx.font = "600 11px Segoe UI";
+            ctx.fillStyle = "#d7e2ec";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "right";
+
+            meta.data.forEach((bar, index) => {
+              const value = Number(dataset.data[index]) || 0;
+              const x = Math.min(bar.x + 8, chartArea.right - 2);
+              ctx.fillText(value.toLocaleString(), x, bar.y);
+            });
+            ctx.restore();
+          },
+        }],
       });
       return true;
     } catch (error) {
@@ -165,8 +225,6 @@ function drawFallbackBars(canvas, rows) {
   ctx.clearRect(0, 0, width, height);
   if (!rows.length) return;
 
-  // Keep the three visual columns separate so labels, bars, and values
-  // remain aligned even when the dashboard card is narrow.
   const visible = rows.slice(0, 7);
   const labelWidth = Math.min(92, Math.max(76, Math.floor(width * 0.30)));
   const valueWidth = 38;
@@ -184,17 +242,14 @@ function drawFallbackBars(canvas, rows) {
     const count = Number(row.count) || 0;
     const barLength = (count / max) * barWidth;
 
-    // Right-align IP labels inside a fixed column.
     ctx.textAlign = "right";
     ctx.fillStyle = "#d7e2ec";
     ctx.fillText(String(row.ip || "N/A").slice(0, 15), labelWidth, centerY);
 
-    // Draw all bars from the same x-origin.
     ctx.textAlign = "left";
     ctx.fillStyle = "#4d96ff";
     ctx.fillRect(barLeft, centerY - 7, barLength, 14);
 
-    // Put every packet count in a fixed right-hand column.
     ctx.textAlign = "right";
     ctx.fillStyle = "#d7e2ec";
     ctx.fillText(count.toLocaleString(), width - 2, centerY);
