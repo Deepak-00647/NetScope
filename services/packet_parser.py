@@ -20,17 +20,28 @@ class PacketParser:
     """Turns a raw sniffed packet into structured metadata."""
 
     @staticmethod
-    def _capture_timestamp(raw_packet):
-        """Return the packet's capture time in UTC, not the parse time."""
+    def _capture_timestamp(raw_packet, captured_at=None):
+        """Return the live capture time in UTC.
+
+        Npcap/Scapy timestamps can be represented differently across Windows
+        capture backends. The capture engine therefore supplies the timestamp
+        taken immediately when the packet callback fires. The Scapy timestamp
+        remains the fallback for parser-only/test usage.
+        """
+        if captured_at is not None:
+            if captured_at.tzinfo is None:
+                return captured_at.replace(tzinfo=timezone.utc)
+            return captured_at.astimezone(timezone.utc)
+
         try:
             return datetime.fromtimestamp(float(raw_packet.time), tz=timezone.utc)
         except (AttributeError, TypeError, ValueError, OSError):
             return datetime.now(timezone.utc)
 
-    def parse(self, raw_packet, interface: str) -> dict | None:
+    def parse(self, raw_packet, interface: str, captured_at=None) -> dict | None:
         try:
             record = {
-                "timestamp": self._capture_timestamp(raw_packet),
+                "timestamp": self._capture_timestamp(raw_packet, captured_at),
                 "interface": interface,
                 "protocol": "UNKNOWN",
                 "src_ip": None,
