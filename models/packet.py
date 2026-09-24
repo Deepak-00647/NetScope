@@ -7,6 +7,9 @@ class Packet(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.String(64), index=True, nullable=False)
+    # Stored as UTC. SQLite does not retain timezone metadata, so the API
+    # explicitly marks timestamps as UTC before the browser converts them to
+    # the user's local timezone.
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     interface = db.Column(db.String(64))
     protocol = db.Column(db.String(20), index=True)
@@ -22,9 +25,13 @@ class Packet(db.Model):
     payload_length = db.Column(db.Integer)
 
     def to_dict(self) -> dict:
+        timestamp = self.timestamp
+        if timestamp is not None and timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+
         return {
             "id": self.id,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": timestamp.isoformat().replace("+00:00", "Z") if timestamp else None,
             "interface": self.interface,
             "protocol": self.protocol,
             "src_ip": self.src_ip,
