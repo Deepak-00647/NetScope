@@ -104,7 +104,8 @@ async function pollAll() {
 document.addEventListener("DOMContentLoaded", () => {
   initCharts();
   pollAll();
-  pollTimer = setInterval(pollAll, 2000);
+  // Poll once per second so the dashboard follows the live capture closely.
+  pollTimer = setInterval(pollAll, 1000);
 
   document.getElementById("btn-start").addEventListener("click", async () => {
     const iface = document.getElementById("interface-select").value;
