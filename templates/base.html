@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>{% block title %}NetScope{% endblock %} | NetScope</title>
+<title>{% block title %}ShadowPacketGuard{% endblock %} | ShadowPacketGuard</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
@@ -15,7 +15,7 @@
   <nav class="ns-sidebar">
     <div class="ns-brand">
       <i class="fa-solid fa-satellite-dish"></i>
-      <span>NetScope</span>
+      <span>ShadowPacketGuard</span>
     </div>
     <ul class="ns-nav">
       <li><a href="{{ url_for('dashboard.index') }}" class="{{ 'active' if request.endpoint=='dashboard.index' }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
