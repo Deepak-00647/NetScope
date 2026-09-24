@@ -2,7 +2,7 @@ Flask==3.0.3
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
 Flask-SQLAlchemy==3.1.1
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.54
 WTForms==3.1.2
 scapy==2.5.0
 reportlab==4.2.0
