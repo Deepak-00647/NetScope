@@ -228,6 +228,7 @@ async function refreshStatus() {
 
 async function refreshStats() {
   const data = await nsFetch("/api/stats");
+  window.__netscope_last_stats = data;
   const summary = data.summary || {};
   document.getElementById("stat-total").textContent = Number(summary.total_packets || 0).toLocaleString();
   document.getElementById("stat-pps").textContent = Number(summary.packets_per_second || 0).toFixed(2);
