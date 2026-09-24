@@ -3,8 +3,30 @@ let protoChart = null;
 let topIpChart = null;
 let pollTimer = null;
 
+const SELECTED_INTERFACE_KEY = "shadowpacketguard.selectedInterface";
+
 function getChartConstructor() {
   return typeof window.Chart === "function" ? window.Chart : null;
+}
+
+function ensureInterfaceSelected(value) {
+  const select = document.getElementById("interface-select");
+  if (!select || !value) return;
+
+  const exists = Array.from(select.options).some(option => option.value === value);
+  if (!exists) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  }
+  select.value = value;
+  localStorage.setItem(SELECTED_INTERFACE_KEY, value);
+}
+
+function restoreInterfaceSelection() {
+  const saved = localStorage.getItem(SELECTED_INTERFACE_KEY);
+  if (saved) ensureInterfaceSelected(saved);
 }
 
 function initCharts() {
@@ -18,10 +40,10 @@ function initCharts() {
     return false;
   }
 
-  // Prefer Chart.js, but keep the dashboard functional if the CDN is blocked.
   if (ChartCtor) {
     try {
       const gridColor = "rgba(255,255,255,0.05)";
+
       rateChart = new ChartCtor(rateCanvas, {
         type: "line",
         data: {
@@ -54,17 +76,26 @@ function initCharts() {
           labels: [],
           datasets: [{
             data: [],
-            backgroundColor: ["#00e5a0", "#4d96ff", "#ffb703", "#ff4d6d", "#9d4edd", "#ff9f1c", "#06d6a0", "#118ab2"],
+            backgroundColor: [
+              "#00e5a0", "#4d96ff", "#ffb703", "#ff4d6d",
+              "#9d4edd", "#ff9f1c", "#06d6a0", "#118ab2"
+            ],
           }],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
+          layout: { padding: { top: 4, bottom: 4 } },
           plugins: {
             legend: {
               position: "bottom",
-              labels: { boxWidth: 10, font: { size: 10 } },
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                padding: 8,
+                font: { size: 10 },
+              },
             },
           },
         },
@@ -148,6 +179,7 @@ function initCharts() {
           },
         }],
       });
+
       return true;
     } catch (error) {
       console.error("Chart.js initialization failed; using canvas fallback:", error);
@@ -163,11 +195,12 @@ function initCharts() {
 function canvasSize(canvas) {
   const rect = canvas.getBoundingClientRect();
   const width = Math.max(Math.floor(rect.width), 280);
-  const height = 180;
+  const height = Math.max(Math.floor(rect.height), 220);
   const ratio = window.devicePixelRatio || 1;
+
   canvas.width = width * ratio;
   canvas.height = height * ratio;
-  canvas.style.height = `${height}px`;
+
   const ctx = canvas.getContext("2d");
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   return { ctx, width, height };
@@ -178,21 +211,36 @@ function drawFallbackLine(canvas, points) {
   ctx.clearRect(0, 0, width, height);
   ctx.strokeStyle = "rgba(255,255,255,0.08)";
   ctx.lineWidth = 1;
+
   for (let y = 25; y < height; y += 35) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
   }
+
   if (!points.length) return;
+
   const values = points.map(p => Number(p.count) || 0);
   const max = Math.max(...values, 1);
-  const left = 8, right = width - 8, top = 12, bottom = height - 15;
+  const left = 8;
+  const right = width - 8;
+  const top = 12;
+  const bottom = height - 15;
+
   ctx.strokeStyle = "#00e5a0";
   ctx.lineWidth = 2;
   ctx.beginPath();
+
   values.forEach((value, i) => {
-    const x = values.length === 1 ? (left + right) / 2 : left + (i * (right - left) / (values.length - 1));
+    const x = values.length === 1
+      ? (left + right) / 2
+      : left + (i * (right - left) / (values.length - 1));
     const y = bottom - (value / max) * (bottom - top);
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   });
+
   ctx.stroke();
 }
 
@@ -200,23 +248,36 @@ function drawFallbackPie(canvas, rows) {
   const { ctx, width, height } = canvasSize(canvas);
   ctx.clearRect(0, 0, width, height);
   if (!rows.length) return;
+
   const values = rows.map(r => Number(r.count) || 0);
   const total = values.reduce((a, b) => a + b, 0) || 1;
-  const cx = width / 2, cy = 78, radius = 58;
-  const colors = ["#00e5a0", "#4d96ff", "#ffb703", "#ff4d6d", "#9d4edd", "#ff9f1c", "#06d6a0", "#118ab2"];
+  const cx = width / 2;
+  const cy = Math.min(height * 0.38, 100);
+  const radius = Math.min(width * 0.25, 72);
+  const colors = [
+    "#00e5a0", "#4d96ff", "#ffb703", "#ff4d6d",
+    "#9d4edd", "#ff9f1c", "#06d6a0", "#118ab2"
+  ];
+
   let angle = -Math.PI / 2;
   values.forEach((value, i) => {
     const next = angle + (value / total) * Math.PI * 2;
-    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, angle, next); ctx.closePath();
-    ctx.fillStyle = colors[i % colors.length]; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, radius, angle, next);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
     angle = next;
   });
-  ctx.fillStyle = "#d7e2ec";
+
   ctx.font = "11px Segoe UI";
   rows.slice(0, 5).forEach((row, i) => {
-    const y = 145 + i * 13;
-    ctx.fillStyle = colors[i % colors.length]; ctx.fillRect(8, y - 8, 8, 8);
-    ctx.fillStyle = "#d7e2ec"; ctx.fillText(`${row.protocol}: ${row.count}`, 21, y);
+    const y = height - 58 + i * 13;
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fillRect(8, y - 8, 8, 8);
+    ctx.fillStyle = "#d7e2ec";
+    ctx.fillText(`${row.protocol}: ${row.count}`, 21, y);
   });
 }
 
@@ -226,12 +287,12 @@ function drawFallbackBars(canvas, rows) {
   if (!rows.length) return;
 
   const visible = rows.slice(0, 7);
-  const labelWidth = Math.min(92, Math.max(76, Math.floor(width * 0.30)));
-  const valueWidth = 38;
+  const labelWidth = Math.min(110, Math.max(82, Math.floor(width * 0.30)));
+  const valueWidth = 45;
   const barLeft = labelWidth + 8;
   const barRight = width - valueWidth - 6;
   const barWidth = Math.max(barRight - barLeft, 40);
-  const rowHeight = Math.min(24, (height - 10) / visible.length);
+  const rowHeight = Math.min(30, (height - 10) / visible.length);
   const max = Math.max(...visible.map(r => Number(r.count) || 0), 1);
 
   ctx.font = "11px Segoe UI";
@@ -259,12 +320,20 @@ function drawFallbackBars(canvas, rows) {
 }
 
 function updateCharts(data) {
-  const series = Array.isArray(data.packet_rate_timeseries) ? data.packet_rate_timeseries.slice(-30) : [];
-  const protocols = Array.isArray(data.protocol_distribution) ? data.protocol_distribution : [];
-  const sourceIps = Array.isArray(data.top_source_ips) ? data.top_source_ips : [];
+  const series = Array.isArray(data.packet_rate_timeseries)
+    ? data.packet_rate_timeseries.slice(-30)
+    : [];
+  const protocols = Array.isArray(data.protocol_distribution)
+    ? data.protocol_distribution
+    : [];
+  const sourceIps = Array.isArray(data.top_source_ips)
+    ? data.top_source_ips.slice(0, 7)
+    : [];
 
   if (rateChart && protoChart && topIpChart) {
-    rateChart.data.labels = series.map(p => String(p.time || "").split(" ")[1] || p.time || "");
+    rateChart.data.labels = series.map(p =>
+      String(p.time || "").split(" ")[1] || p.time || ""
+    );
     rateChart.data.datasets[0].data = series.map(p => Number(p.count) || 0);
     rateChart.update("none");
 
@@ -285,87 +354,158 @@ function updateCharts(data) {
 
 function setStatusBadge(status) {
   const badge = document.getElementById("capture-status-badge");
-  badge.textContent = status.toUpperCase();
-  badge.className = "ns-status-badge status-" + status;
+  if (!badge) return;
+  badge.textContent = String(status || "stopped").toUpperCase();
+  badge.className = "ns-status-badge status-" + (status || "stopped");
 }
 
 function updateButtons(status) {
-  document.getElementById("btn-start").disabled = status !== "stopped";
-  document.getElementById("btn-pause").disabled = status !== "running";
-  document.getElementById("btn-resume").disabled = status !== "paused";
-  document.getElementById("btn-stop").disabled = status === "stopped";
+  const start = document.getElementById("btn-start");
+  const pause = document.getElementById("btn-pause");
+  const resume = document.getElementById("btn-resume");
+  const stop = document.getElementById("btn-stop");
+
+  if (!start || !pause || !resume || !stop) return;
+
+  start.disabled = status !== "stopped";
+  pause.disabled = status !== "running";
+  resume.disabled = status !== "paused";
+  stop.disabled = status === "stopped";
 }
 
 async function refreshStatus() {
   const data = await nsFetch("/api/capture/status");
   setStatusBadge(data.status);
   updateButtons(data.status);
+
+  if (data.interface) {
+    ensureInterfaceSelected(data.interface);
+  } else {
+    restoreInterfaceSelection();
+  }
+
   const meta = document.getElementById("capture-meta");
-  meta.textContent = data.interface ? `Interface: ${data.interface} | Packets: ${Number(data.packet_count || 0).toLocaleString()}` : "";
+  if (meta) {
+    meta.textContent = data.interface
+      ? `Interface: ${data.interface} | Packets: ${Number(data.packet_count || 0).toLocaleString()}`
+      : "";
+  }
+
   const errBox = document.getElementById("capture-error");
-  if (data.error) { errBox.textContent = data.error; errBox.classList.remove("d-none"); }
-  else { errBox.classList.add("d-none"); }
+  if (errBox) {
+    if (data.error) {
+      errBox.textContent = data.error;
+      errBox.classList.remove("d-none");
+    } else {
+      errBox.classList.add("d-none");
+    }
+  }
 }
 
 async function refreshStats() {
   const data = await nsFetch("/api/stats");
-  window.__netscope_last_stats = data;
+  window.__shadowpacketguard_last_stats = data;
   const summary = data.summary || {};
-  document.getElementById("stat-total").textContent = Number(summary.total_packets || 0).toLocaleString();
-  document.getElementById("stat-pps").textContent = Number(summary.packets_per_second || 0).toFixed(2);
-  document.getElementById("stat-avgsize").textContent = Number(summary.average_packet_size || 0).toFixed(2) + " B";
-  document.getElementById("stat-bandwidth").textContent = humanBytes(Number(summary.bandwidth_bytes_per_second || 0)) + "/s";
+
+  document.getElementById("stat-total").textContent =
+    Number(summary.total_packets || 0).toLocaleString();
+  document.getElementById("stat-pps").textContent =
+    Number(summary.packets_per_second || 0).toFixed(2);
+  document.getElementById("stat-avgsize").textContent =
+    Number(summary.average_packet_size || 0).toFixed(2) + " B";
+  document.getElementById("stat-bandwidth").textContent =
+    humanBytes(Number(summary.bandwidth_bytes_per_second || 0)) + "/s";
 
   updateCharts(data);
 
   const portsBox = document.getElementById("top-ports-list");
   const ports = Array.isArray(data.top_ports) ? data.top_ports : [];
-  portsBox.innerHTML = ports.map(p => `<div class="mini-row"><span>Port ${p.port}</span><span>${p.count}</span></div>`).join("") || '<div class="text-secondary">No data yet</div>';
+  portsBox.innerHTML = ports.map(p =>
+    `<div class="mini-row"><span>Port ${p.port}</span><span>${Number(p.count || 0).toLocaleString()}</span></div>`
+  ).join("") || '<div class="text-secondary">No data yet</div>';
 }
 
 async function refreshAlerts() {
   const data = await nsFetch("/api/alerts");
   const box = document.getElementById("recent-alerts");
   const recent = (Array.isArray(data.alerts) ? data.alerts : []).slice(0, 8);
+
   box.innerHTML = recent.map(a => `
     <div class="alert-row">
       <span><span class="badge badge-severity-${a.severity}">${a.severity}</span> ${a.alert_type} — ${a.source_ip || "N/A"}</span>
       <span class="text-secondary">${new Date(a.timestamp).toLocaleTimeString()}</span>
-    </div>`).join("") || '<div class="text-secondary">No alerts yet</div>';
+    </div>
+  `).join("") || '<div class="text-secondary">No alerts yet</div>';
 }
 
 function humanBytes(n) {
   const units = ["B", "KB", "MB", "GB", "TB"];
   let i = 0;
-  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024;
+    i++;
+  }
   return `${n.toFixed(2)} ${units[i]}`;
 }
 
 async function pollAll() {
   try {
     await Promise.all([refreshStatus(), refreshStats(), refreshAlerts()]);
-  } catch (e) { console.error("Dashboard refresh failed:", e); }
+  } catch (e) {
+    console.error("Dashboard refresh failed:", e);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  restoreInterfaceSelection();
   initCharts();
   pollAll();
   pollTimer = setInterval(pollAll, 1000);
 
   window.addEventListener("resize", () => {
     if (!rateChart) {
-      const last = window.__netscope_last_stats;
+      const last = window.__shadowpacketguard_last_stats;
       if (last) updateCharts(last);
     }
   });
 
+  const interfaceSelect = document.getElementById("interface-select");
+  interfaceSelect.addEventListener("change", () => {
+    const value = interfaceSelect.value;
+    if (value) localStorage.setItem(SELECTED_INTERFACE_KEY, value);
+  });
+
   document.getElementById("btn-start").addEventListener("click", async () => {
-    const iface = document.getElementById("interface-select").value;
-    if (!iface) { alert("Select an interface first."); return; }
-    await nsFetch("/api/capture/start", { method: "POST", body: JSON.stringify({ interface: iface }) });
+    const iface = interfaceSelect.value;
+    if (!iface) {
+      alert("Select an interface first.");
+      return;
+    }
+
+    localStorage.setItem(SELECTED_INTERFACE_KEY, iface);
+    try {
+      await nsFetch("/api/capture/start", {
+        method: "POST",
+        body: JSON.stringify({ interface: iface }),
+      });
+      await pollAll();
+    } catch (error) {
+      console.error("Failed to start capture:", error);
+    }
+  });
+
+  document.getElementById("btn-pause").addEventListener("click", async () => {
+    await nsFetch("/api/capture/pause", { method: "POST" });
     pollAll();
   });
-  document.getElementById("btn-pause").addEventListener("click", async () => { await nsFetch("/api/capture/pause", { method: "POST" }); pollAll(); });
-  document.getElementById("btn-resume").addEventListener("click", async () => { await nsFetch("/api/capture/resume", { method: "POST" }); pollAll(); });
-  document.getElementById("btn-stop").addEventListener("click", async () => { await nsFetch("/api/capture/stop", { method: "POST" }); pollAll(); });
+
+  document.getElementById("btn-resume").addEventListener("click", async () => {
+    await nsFetch("/api/capture/resume", { method: "POST" });
+    pollAll();
+  });
+
+  document.getElementById("btn-stop").addEventListener("click", async () => {
+    await nsFetch("/api/capture/stop", { method: "POST" });
+    pollAll();
+  });
 });

@@ -9,19 +9,19 @@
 <div class="ns-card ns-controls">
   <div class="row g-3 align-items-end">
     <div class="col-md-4">
-      <label class="form-label">Network Interface</label>
+      <label class="form-label" for="interface-select">Network Interface</label>
       <select id="interface-select" class="form-select">
         {% for iface in interfaces %}
           <option value="{{ iface }}">{{ iface }}</option>
         {% endfor %}
       </select>
     </div>
-    <div class="col-md-8 d-flex gap-2">
+    <div class="col-md-8 d-flex flex-wrap gap-2">
       <button id="btn-start" class="btn btn-success"><i class="fa-solid fa-play"></i> Start</button>
       <button id="btn-pause" class="btn btn-warning" disabled><i class="fa-solid fa-pause"></i> Pause</button>
       <button id="btn-resume" class="btn btn-info" disabled><i class="fa-solid fa-play"></i> Resume</button>
       <button id="btn-stop" class="btn btn-danger" disabled><i class="fa-solid fa-stop"></i> Stop</button>
-      <div class="ms-auto text-secondary small align-self-center" id="capture-meta"></div>
+      <div class="ms-auto text-secondary small align-self-center ns-capture-meta" id="capture-meta"></div>
     </div>
   </div>
   <div id="capture-error" class="alert alert-danger mt-3 d-none"></div>
@@ -36,21 +36,21 @@
 
 <div class="row g-3 mt-1">
   <div class="col-lg-6">
-    <div class="ns-card">
+    <div class="ns-card ns-chart-card">
       <h5><i class="fa-solid fa-chart-line"></i> Packet Rate</h5>
-      <canvas id="chart-rate" height="180"></canvas>
+      <div class="ns-chart-wrap ns-chart-rate"><canvas id="chart-rate"></canvas></div>
     </div>
   </div>
   <div class="col-lg-3">
-    <div class="ns-card">
+    <div class="ns-card ns-chart-card">
       <h5><i class="fa-solid fa-chart-pie"></i> Protocol Distribution</h5>
-      <canvas id="chart-protocol" height="180"></canvas>
+      <div class="ns-chart-wrap ns-chart-pie"><canvas id="chart-protocol"></canvas></div>
     </div>
   </div>
   <div class="col-lg-3">
-    <div class="ns-card">
+    <div class="ns-card ns-chart-card">
       <h5><i class="fa-solid fa-chart-bar"></i> Top Source IPs</h5>
-      <canvas id="chart-topips" height="180"></canvas>
+      <div class="ns-chart-wrap ns-chart-topips"><canvas id="chart-topips"></canvas></div>
     </div>
   </div>
 </div>

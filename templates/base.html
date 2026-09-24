@@ -10,10 +10,17 @@
 <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
+<div id="ns-page-loader" class="ns-page-loader" aria-hidden="true">
+  <div class="ns-loader-card" role="status" aria-live="polite">
+    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+    <span>Loading...</span>
+  </div>
+</div>
+
 {% if current_user.is_authenticated %}
 <div class="ns-shell">
   <nav class="ns-sidebar">
-    <div class="ns-brand">
+    <div class="ns-brand" title="ShadowPacketGuard">
       <i class="fa-solid fa-satellite-dish"></i>
       <span>ShadowPacketGuard</span>
     </div>
@@ -51,7 +58,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script>
-  window.NETSCOPE_CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  window.NETSCOPE_CSRF = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 </script>
 <script src="{{ url_for('static', filename='js/common.js') }}"></script>
 {% block scripts %}{% endblock %}

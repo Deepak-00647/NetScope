@@ -10,15 +10,21 @@
   --ns-text-dim: #7d92a8;
 }
 
-body { background: var(--ns-bg); color: var(--ns-text); font-family: "Segoe UI", Roboto, sans-serif; }
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body { background: var(--ns-bg); color: var(--ns-text); font-family: "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
 
 .ns-shell { display: flex; min-height: 100vh; }
 
 .ns-sidebar {
-  width: 230px; background: var(--ns-panel); border-right: 1px solid var(--ns-panel-border);
+  width: 230px; flex: 0 0 230px; background: var(--ns-panel); border-right: 1px solid var(--ns-panel-border);
   display: flex; flex-direction: column; padding: 1.25rem 1rem; position: sticky; top: 0; height: 100vh;
 }
-.ns-brand { display: flex; align-items: center; gap: .6rem; font-size: 1.25rem; font-weight: 700; color: var(--ns-accent); margin-bottom: 2rem; }
+.ns-brand {
+  display: flex; align-items: center; gap: .6rem; min-width: 0; font-size: 1.15rem; font-weight: 700;
+  color: var(--ns-accent); margin-bottom: 2rem;
+}
+.ns-brand span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ns-brand-center { justify-content: center; }
 .ns-nav { list-style: none; padding: 0; margin: 0; flex: 1; }
 .ns-nav li a {
@@ -28,30 +34,49 @@ body { background: var(--ns-bg); color: var(--ns-text); font-family: "Segoe UI",
 .ns-nav li a:hover { background: rgba(0,229,160,0.08); color: var(--ns-text); }
 .ns-nav li a.active { background: var(--ns-accent-dim); color: var(--ns-accent); font-weight: 600; }
 .ns-sidebar-footer { border-top: 1px solid var(--ns-panel-border); padding-top: 1rem; font-size: .85rem; }
-.ns-user { color: var(--ns-text-dim); }
+.ns-user { color: var(--ns-text-dim); overflow-wrap: anywhere; }
 
-.ns-main { flex: 1; padding: 1.75rem 2rem; max-width: 100%; }
-.ns-page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-.ns-page-header h1 { font-size: 1.4rem; font-weight: 700; }
+.ns-main { flex: 1 1 auto; min-width: 0; padding: 1.75rem 2rem; max-width: 100%; }
+.ns-page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; min-width: 0; }
+.ns-page-header h1 { min-width: 0; font-size: 1.4rem; font-weight: 700; margin: 0; overflow-wrap: anywhere; }
 
-.ns-card { background: var(--ns-panel); border: 1px solid var(--ns-panel-border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-.ns-card h5 { color: var(--ns-text-dim); font-size: .95rem; margin-bottom: .9rem; }
+.ns-card {
+  background: var(--ns-panel); border: 1px solid var(--ns-panel-border); border-radius: 12px;
+  padding: 1.25rem; margin-bottom: 1rem; min-width: 0; overflow: hidden;
+}
+.ns-card h5 {
+  color: var(--ns-text-dim); font-size: .95rem; margin: 0 0 .9rem; min-width: 0;
+  overflow-wrap: anywhere; line-height: 1.35;
+}
+.ns-card h5 i { margin-right: .25rem; }
 
 .ns-stat { text-align: center; }
-.ns-stat-label { color: var(--ns-text-dim); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
-.ns-stat-value { font-size: 1.9rem; font-weight: 700; color: var(--ns-accent); margin-top: .25rem; }
+.ns-stat-label { color: var(--ns-text-dim); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; overflow-wrap: anywhere; }
+.ns-stat-value { font-size: 1.9rem; font-weight: 700; color: var(--ns-accent); margin-top: .25rem; overflow-wrap: anywhere; }
 
-.ns-status-badge { padding: .4rem .9rem; border-radius: 20px; font-weight: 700; font-size: .8rem; letter-spacing: .05em; }
+.ns-status-badge { flex: 0 0 auto; padding: .4rem .9rem; border-radius: 20px; font-weight: 700; font-size: .8rem; letter-spacing: .05em; }
 .status-stopped { background: rgba(255,77,109,0.15); color: var(--ns-danger); }
 .status-running { background: rgba(0,229,160,0.15); color: var(--ns-accent); animation: pulse 1.5s infinite; }
 .status-paused { background: rgba(255,183,3,0.15); color: var(--ns-warning); }
 @keyframes pulse { 0%{opacity:1;} 50%{opacity:.55;} 100%{opacity:1;} }
 
+.ns-chart-card { display: flex; flex-direction: column; }
+.ns-chart-wrap { position: relative; width: 100%; min-width: 0; height: 250px; }
+.ns-chart-wrap canvas { display: block !important; width: 100% !important; height: 100% !important; max-width: 100%; }
+.ns-chart-pie { height: 270px; }
+.ns-chart-topips { height: 270px; }
+
+.ns-capture-meta { min-width: 0; overflow-wrap: anywhere; text-align: right; }
+
 .ns-table thead th { color: var(--ns-text-dim); font-size: .75rem; text-transform: uppercase; border-color: var(--ns-panel-border); }
 .ns-table td { font-size: .85rem; border-color: var(--ns-panel-border); vertical-align: middle; }
 
-.ns-alert-list .alert-row { display:flex; justify-content:space-between; padding:.5rem .25rem; border-bottom:1px solid var(--ns-panel-border); font-size:.85rem; }
-.ns-mini-list .mini-row { display:flex; justify-content:space-between; padding:.4rem .25rem; border-bottom:1px solid var(--ns-panel-border); font-size:.85rem; }
+.ns-alert-list .alert-row, .ns-mini-list .mini-row {
+  display:flex; justify-content:space-between; align-items:center; gap: .75rem; padding:.5rem .25rem;
+  border-bottom:1px solid var(--ns-panel-border); font-size:.85rem;
+}
+.ns-alert-list .alert-row > span:first-child, .ns-mini-list .mini-row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.ns-alert-list .alert-row > span:last-child, .ns-mini-list .mini-row > span:last-child { flex: 0 0 auto; white-space: nowrap; }
 
 .badge-severity-Low { background:#2b6; }
 .badge-severity-Medium { background: var(--ns-warning); color:#111; }
@@ -59,7 +84,40 @@ body { background: var(--ns-bg); color: var(--ns-text); font-family: "Segoe UI",
 .badge-severity-Critical { background: var(--ns-danger); }
 
 .ns-auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top, #0f2027, #0a0e14 60%); }
-.ns-auth-card { background: var(--ns-panel); border: 1px solid var(--ns-panel-border); border-radius: 16px; padding: 2.5rem; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+.ns-auth-card { background: var(--ns-panel); border: 1px solid var(--ns-panel-border); border-radius: 16px; padding: 2.5rem; width: min(380px, calc(100vw - 2rem)); box-shadow: 0 20px 60px rgba(0,0,0,.4); }
 
 .form-control, .form-select { background: #0d1420; border-color: var(--ns-panel-border); color: var(--ns-text); }
 .form-control:focus, .form-select:focus { background: #0d1420; color: var(--ns-text); border-color: var(--ns-accent); box-shadow: 0 0 0 .2rem rgba(0,229,160,.15); }
+
+.ns-page-loader {
+  position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center;
+  background: rgba(10,14,20,.72); backdrop-filter: blur(3px); opacity: 0; visibility: hidden;
+  pointer-events: none; transition: opacity .15s ease, visibility .15s ease;
+}
+.ns-page-loader.is-visible { opacity: 1; visibility: visible; pointer-events: all; }
+.ns-loader-card {
+  display: inline-flex; align-items: center; gap: .7rem; padding: .8rem 1.1rem; border-radius: 10px;
+  background: var(--ns-panel); border: 1px solid var(--ns-panel-border); color: var(--ns-text); box-shadow: 0 12px 30px rgba(0,0,0,.35);
+}
+.ns-loader-card .spinner-border { color: var(--ns-accent); }
+
+@media (max-width: 992px) {
+  .ns-sidebar { width: 210px; flex-basis: 210px; }
+  .ns-main { padding: 1.25rem; }
+}
+@media (max-width: 768px) {
+  .ns-shell { display: block; }
+  .ns-sidebar { width: 100%; height: auto; position: relative; border-right: 0; border-bottom: 1px solid var(--ns-panel-border); }
+  .ns-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+  .ns-nav li a { justify-content: center; font-size: .8rem; padding: .6rem .35rem; }
+  .ns-nav li a i { display: none; }
+  .ns-sidebar-footer { display: none; }
+  .ns-brand { margin-bottom: 1rem; }
+  .ns-page-header { align-items: flex-start; }
+  .ns-chart-wrap, .ns-chart-pie, .ns-chart-topips { height: 230px; }
+}
+@media (max-width: 480px) {
+  .ns-main { padding: 1rem; }
+  .ns-page-header h1 { font-size: 1.2rem; }
+  .ns-chart-wrap, .ns-chart-pie, .ns-chart-topips { height: 220px; }
+}
