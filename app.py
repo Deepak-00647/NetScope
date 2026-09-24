@@ -1,5 +1,5 @@
 """
-NetScope – Network Packet Analyzer & Traffic Monitor
+ShadowPacketGuard – Real-Time Network Packet Analysis and Threat Detection Platform
 Application entry point / factory.
 """
 import os
