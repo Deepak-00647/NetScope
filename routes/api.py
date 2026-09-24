@@ -9,13 +9,17 @@ from services.statistics import StatisticsService
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
+def _engine():
+    return current_app.extensions["netscope_capture_engine"]
+
+
 def _session_id():
     """Resolve which session's data to show: explicit param, else the active
     capture engine's session, else the most recent session in the DB."""
     sid = request.args.get("session_id")
     if sid:
         return sid
-    engine = current_app.extensions["netscope_capture_engine"]
+    engine = _engine()
     if engine.session.session_id:
         return engine.session.session_id
     last = db.session.query(Packet.session_id).order_by(Packet.id.desc()).first()
@@ -28,6 +32,13 @@ def packets():
     sid = _session_id()
     page = max(int(request.args.get("page", 1)), 1)
     per_page = min(int(request.args.get("per_page", 50)), 200)
+
+    # Make any packets captured since the last background flush visible before
+    # serving packet pages.
+    try:
+        _engine().storage.flush()
+    except Exception as exc:
+        current_app.logger.warning("Packet flush before /packets failed: %s", exc)
 
     query = db.session.query(Packet)
     if sid:
@@ -77,6 +88,15 @@ def stats():
             "protocol_distribution": [], "top_source_ips": [], "top_destination_ips": [],
             "top_ports": [], "packet_rate_timeseries": [], "session_id": None,
         })
+
+    # The capture thread can receive packets between background flushes. Flush
+    # once immediately before calculating the dashboard snapshot so totals,
+    # rates, bandwidth and charts are based on the newest captured packets.
+    try:
+        _engine().storage.flush()
+    except Exception as exc:
+        current_app.logger.warning("Packet flush before /stats failed: %s", exc)
+
     return jsonify({
         "session_id": sid,
         "summary": StatisticsService.summary(sid),
