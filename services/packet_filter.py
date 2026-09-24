@@ -2,7 +2,7 @@
 Builds SQLAlchemy filter conditions for the packet search/filter UI.
 Keeps query construction out of the routes layer.
 """
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from models import Packet
 
 
@@ -29,7 +29,10 @@ class PacketFilter:
         if date_str:
             try:
                 day = datetime.strptime(date_str, "%Y-%m-%d").date()
-                query = query.filter(db_date_match(Packet.timestamp, day))
+                # Browser sends UTC offset in minutes (UTC - local). Convert
+                # the user's local calendar day into a UTC half-open range.
+                tz_offset = int(args.get("tz_offset", "0"))
+                query = query.filter(db_local_date_match(Packet.timestamp, day, tz_offset))
             except ValueError:
                 pass
 
@@ -54,6 +57,21 @@ class PacketFilter:
         return query
 
 
+def db_local_date_match(column, day, tz_offset_minutes=0):
+    """Match a browser-local date against UTC timestamps stored by SQLite."""
+    from sqlalchemy import and_
+
+    local_start = datetime.combine(day, datetime.min.time())
+    local_end = local_start + timedelta(days=1)
+    utc_start = local_start + timedelta(minutes=tz_offset_minutes)
+    utc_end = local_end + timedelta(minutes=tz_offset_minutes)
+
+    return and_(
+        column >= utc_start,
+        column < utc_end,
+    )
+
+
+# Backward-compatible helper name for callers/tests that imported it directly.
 def db_date_match(column, day):
-    from sqlalchemy import func
-    return func.date(column) == day.isoformat()
+    return db_local_date_match(column, day, 0)
