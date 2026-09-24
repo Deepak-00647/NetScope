@@ -16,18 +16,19 @@ class StatisticsService:
         avg_size = base.with_entities(func.avg(Packet.packet_size)).scalar() or 0
         total_bytes = base.with_entities(func.sum(Packet.packet_size)).scalar() or 0
 
-        # Packets/sec is a live rate, not the lifetime average. Looking at a
-        # short rolling window makes the dashboard react to current traffic.
+        # Live traffic window: current packet rate and byte rate are calculated
+        # from the most recent five seconds rather than lifetime totals.
         window_start = datetime.now(timezone.utc) - timedelta(seconds=5)
         recent = base.filter(Packet.timestamp >= window_start)
         recent_count = recent.count()
-        pps = recent_count / 5.0
+        recent_bytes = recent.with_entities(func.sum(Packet.packet_size)).scalar() or 0
 
         return {
             "total_packets": total_packets,
             "average_packet_size": round(float(avg_size), 2),
             "total_bytes": int(total_bytes),
-            "packets_per_second": round(pps, 2),
+            "packets_per_second": round(recent_count / 5.0, 2),
+            "bandwidth_bytes_per_second": round(float(recent_bytes) / 5.0, 2),
         }
 
     @staticmethod
