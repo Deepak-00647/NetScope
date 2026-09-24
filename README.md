@@ -1,13 +1,13 @@
-# NetScope
+# ShadowPacketGuard – Real-Time Network Packet Analysis and Threat Detection Platform
 
-NetScope is a Python-based network packet analyzer and monitoring dashboard.
+**ShadowPacketGuard** is a Python-based real-time network packet analysis and threat detection platform.
 It captures live traffic with Scapy, classifies packets, stores session data,
-tracks alerts, and renders a Flask-powered dashboard for monitoring and
-report generation.
+tracks security alerts, and renders a Flask-powered dashboard for monitoring,
+analysis, and report generation.
 
 This is a defensive/monitoring tool for networks you own or are authorized
-to monitor. Capturing traffic on a network without authorization may be
-illegal in your jurisdiction.
+to monitor. Capturing traffic on a network without authorization may be illegal
+in your jurisdiction.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ illegal in your jurisdiction.
 ## Setup
 
 ```bash
-# From the NetScope/ folder
+# From the project folder
 python -m venv venv
 
 # Windows
@@ -39,7 +39,7 @@ The first account registered through `/register` becomes the admin user.
 You can also create an admin from the CLI:
 
 ```bash
-flask --app app.py create-admin <username> <email>
+flask --app app.py create-admin --username <username> --email <email> --password <password>
 ```
 
 ## Running the Application
@@ -53,18 +53,18 @@ python app.py
 
 Then browse to `http://127.0.0.1:5000`.
 
-## Using NetScope
+## Using ShadowPacketGuard
 
 1. Register or log in.
 2. On the Dashboard, choose a network interface and press Start.
-3. Watch live packet statistics, protocol distribution, and alert activity.
+3. Watch live packet statistics, protocol distribution, source IPs, destination ports, and alert activity.
 4. Review packet details under Packets.
-5. Generate PDF reports from the Reports section.
+5. Generate PDF traffic and threat reports from the Reports section.
 
 ## Project Structure
 
 ```text
-NetScope/
+ShadowPacketGuard/
   app.py
   config.py
   requirements.txt
@@ -84,43 +84,41 @@ NetScope/
 - Live packet capture
 - Packet inspection and protocol detection
 - Threat detection heuristics
-- Dashboard analytics and alerting
-- PDF report generation
-- Search & filters by IP, port, protocol, date, packet size.
-- Statistics: totals, packets/sec, protocol distribution, top source/dest
-  IPs, top ports, average size, bandwidth.
-- Charts: packet-rate line chart, protocol pie chart, top-IP bar chart.
-- Threat detection: port scanning, SYN/ICMP/UDP floods, abnormal packet
-  rate, large packet bursts, suspicious ports — each with severity and a
-  cooldown to avoid alert spam.
-- PDF reports via ReportLab with recommendations based on what was found.
+- Real-time dashboard analytics and alerting
+- PDF traffic/threat report generation
+- Search and filters by IP, port, protocol, date, and packet size
+- Statistics: totals, packets/sec, protocol distribution, top source/destination IPs,
+  top ports, average packet size, and bandwidth
+- Charts: packet-rate line chart, protocol pie chart, and top-source-IP bar chart
+- Threat detection: port scanning, SYN/ICMP/UDP floods, abnormal packet rate,
+  large packet bursts, and suspicious ports — each with severity and cooldown
+  handling to reduce alert spam
+- PDF reports via ReportLab with recommendations based on detected activity
 - Security: CSRF protection (Flask-WTF), password hashing (Werkzeug),
-  parameterized queries (SQLAlchemy ORM — no raw SQL string building),
-  server-side input validation, structured logging with rotation,
-  localhost-only binding.
+  parameterized database access (SQLAlchemy ORM), server-side input validation,
+  structured logging with rotation, and localhost-only binding
 
-## 8. Tuning Detection Thresholds
+## Detection Threshold Tuning
 
-All thresholds live in `config.py` under `Config` (e.g.
-`PORT_SCAN_UNIQUE_PORTS_THRESHOLD`, `SYN_FLOOD_THRESHOLD`,
-`ABNORMAL_RATE_PPS_THRESHOLD`). Adjust them to match your network's normal
-traffic volume before relying on alerts.
+All detection thresholds live in `config.py` under `Config` (for example,
+`PORT_SCAN_UNIQUE_PORTS_THRESHOLD`, `SYN_FLOOD_THRESHOLD`, and
+`ABNORMAL_RATE_PPS_THRESHOLD`). Adjust them to match the normal traffic volume
+of the network being monitored before relying on alerts.
 
-## 9. Troubleshooting
+## Troubleshooting
 
-- **"Permission denied" / no interfaces listed**: run as Administrator/root;
-  on Windows, confirm Npcap is installed.
-- **No packets appearing**: verify you selected the interface that actually
-  carries traffic (Wi-Fi vs Ethernet vs a virtual adapter).
-- **Capture stops unexpectedly**: check `logs/packet_capture.log` for the
+- **Permission denied / no interfaces listed:** run as Administrator/root and,
+  on Windows, confirm Npcap is installed correctly.
+- **No packets appearing:** verify that the selected interface actually carries
+  traffic (Wi-Fi, Ethernet, or the intended virtual adapter).
+- **Capture stops unexpectedly:** check `logs/packet_capture.log` for the
   underlying Scapy/OS error.
 
-## 10. Future Improvements
+## Future Improvements
 
-- Role-based UI restrictions (admin-only interface/user management page)
-- Export packets/alerts to CSV
-- Configurable alert thresholds from the UI instead of `config.py`
+- Role-based UI restrictions for administration pages
+- Export packets and alerts to CSV
+- Configurable alert thresholds from the UI
 - WebSocket-based push updates instead of polling
 - GeoIP enrichment for source/destination IPs
 - Packet payload hex/ASCII viewer with redaction of sensitive fields
->>>>>>> edd5af0 (Initial NetScope commit)
