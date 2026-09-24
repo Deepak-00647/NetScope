@@ -164,17 +164,43 @@ function drawFallbackBars(canvas, rows) {
   const { ctx, width, height } = canvasSize(canvas);
   ctx.clearRect(0, 0, width, height);
   if (!rows.length) return;
-  const max = Math.max(...rows.map(r => Number(r.count) || 0), 1);
+
+  // Keep the three visual columns separate so labels, bars, and values
+  // remain aligned even when the dashboard card is narrow.
   const visible = rows.slice(0, 7);
+  const labelWidth = Math.min(92, Math.max(76, Math.floor(width * 0.30)));
+  const valueWidth = 38;
+  const barLeft = labelWidth + 8;
+  const barRight = width - valueWidth - 6;
+  const barWidth = Math.max(barRight - barLeft, 40);
   const rowHeight = Math.min(24, (height - 10) / visible.length);
+  const max = Math.max(...visible.map(r => Number(r.count) || 0), 1);
+
   ctx.font = "11px Segoe UI";
+  ctx.textBaseline = "middle";
+
   visible.forEach((row, i) => {
-    const y = 6 + i * rowHeight;
-    const barWidth = ((Number(row.count) || 0) / max) * (width - 95);
-    ctx.fillStyle = "#4d96ff"; ctx.fillRect(85, y + 2, barWidth, rowHeight - 6);
-    ctx.fillStyle = "#d7e2ec"; ctx.fillText(String(row.ip).slice(0, 13), 3, y + rowHeight - 8);
-    ctx.fillText(String(row.count), Math.min(88 + barWidth, width - 30), y + rowHeight - 8);
+    const centerY = 7 + i * rowHeight + rowHeight / 2;
+    const count = Number(row.count) || 0;
+    const barLength = (count / max) * barWidth;
+
+    // Right-align IP labels inside a fixed column.
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#d7e2ec";
+    ctx.fillText(String(row.ip || "N/A").slice(0, 15), labelWidth, centerY);
+
+    // Draw all bars from the same x-origin.
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#4d96ff";
+    ctx.fillRect(barLeft, centerY - 7, barLength, 14);
+
+    // Put every packet count in a fixed right-hand column.
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#d7e2ec";
+    ctx.fillText(count.toLocaleString(), width - 2, centerY);
   });
+
+  ctx.textBaseline = "alphabetic";
 }
 
 function updateCharts(data) {
