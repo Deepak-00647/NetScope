@@ -21,11 +21,18 @@ function ensureInterfaceSelected(value) {
     select.appendChild(option);
   }
   select.value = value;
-  localStorage.setItem(SELECTED_INTERFACE_KEY, value);
+}
+
+function saveInterfaceSelection(value) {
+  if (value) localStorage.setItem(SELECTED_INTERFACE_KEY, value);
+}
+
+function getSavedInterface() {
+  return localStorage.getItem(SELECTED_INTERFACE_KEY) || "";
 }
 
 function restoreInterfaceSelection() {
-  const saved = localStorage.getItem(SELECTED_INTERFACE_KEY);
+  const saved = getSavedInterface();
   if (saved) ensureInterfaceSelected(saved);
 }
 
@@ -378,8 +385,15 @@ async function refreshStatus() {
   setStatusBadge(data.status);
   updateButtons(data.status);
 
-  if (data.interface) {
-    ensureInterfaceSelected(data.interface);
+  // While a capture is active, the server's interface is authoritative.
+  // When stopped, the last manually selected interface is authoritative.
+  // This prevents the previous capture's interface from overwriting a new
+  // manual selection when navigating away and returning to the dashboard.
+  if (data.status === "running" || data.status === "paused") {
+    if (data.interface) {
+      ensureInterfaceSelected(data.interface);
+      saveInterfaceSelection(data.interface);
+    }
   } else {
     restoreInterfaceSelection();
   }
@@ -471,8 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const interfaceSelect = document.getElementById("interface-select");
   interfaceSelect.addEventListener("change", () => {
-    const value = interfaceSelect.value;
-    if (value) localStorage.setItem(SELECTED_INTERFACE_KEY, value);
+    saveInterfaceSelection(interfaceSelect.value);
   });
 
   document.getElementById("btn-start").addEventListener("click", async () => {
@@ -482,7 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    localStorage.setItem(SELECTED_INTERFACE_KEY, iface);
+    saveInterfaceSelection(iface);
     try {
       await nsFetch("/api/capture/start", {
         method: "POST",
