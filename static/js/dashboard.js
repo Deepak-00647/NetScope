@@ -56,7 +56,7 @@ async function refreshStats() {
   document.getElementById("stat-total").textContent = data.summary.total_packets.toLocaleString();
   document.getElementById("stat-pps").textContent = data.summary.packets_per_second;
   document.getElementById("stat-avgsize").textContent = data.summary.average_packet_size + " B";
-  document.getElementById("stat-bandwidth").textContent = humanBytes(data.summary.total_bytes);
+  document.getElementById("stat-bandwidth").textContent = humanBytes(data.summary.bandwidth_bytes_per_second) + "/s";
 
   const series = data.packet_rate_timeseries.slice(-30);
   if (chartsAvailable && rateChart && protoChart && topIpChart) {
