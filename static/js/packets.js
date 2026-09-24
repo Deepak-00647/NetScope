@@ -10,11 +10,26 @@ function buildQuery() {
   if (ip) params.set("ip", ip);
   if (port) params.set("port", port);
   if (protocol && protocol !== "ALL") params.set("protocol", protocol);
-  if (date) params.set("date", date);
+  if (date) {
+    params.set("date", date);
+    params.set("tz_offset", String(new Date().getTimezoneOffset()));
+  }
   if (minSize) params.set("min_size", minSize);
   params.set("page", currentPage);
   params.set("per_page", 50);
   return params.toString();
+}
+
+function formatPacketTime(timestamp) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "Invalid time";
+
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
 }
 
 async function loadPackets() {
@@ -22,7 +37,7 @@ async function loadPackets() {
   const tbody = document.getElementById("packet-table-body");
   tbody.innerHTML = data.packets.map(p => `
     <tr>
-      <td>${p.timestamp ? new Date(p.timestamp).toLocaleTimeString() : ""}</td>
+      <td title="${p.timestamp || ""}">${formatPacketTime(p.timestamp)}</td>
       <td>${p.protocol || ""}</td>
       <td>${p.src_ip || ""}</td>
       <td>${p.src_port ?? ""}</td>
