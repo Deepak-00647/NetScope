@@ -34,7 +34,7 @@ class ReportGenerator:
             .all()
         )
 
-        filename = f"netscope_report_{session_id}_{datetime.now(timezone.utc):%Y%m%d%H%M%S}.pdf"
+        filename = f"shadowpacketguard_report_{session_id}_{datetime.now(timezone.utc):%Y%m%d%H%M%S}.pdf"
         filepath = os.path.join(self.report_dir, filename)
 
         doc = SimpleDocTemplate(filepath, pagesize=A4, topMargin=2 * cm, bottomMargin=2 * cm)
@@ -44,7 +44,8 @@ class ReportGenerator:
         normal = styles["BodyText"]
 
         story = []
-        story.append(Paragraph("NetScope Traffic &amp; Threat Report", title_style))
+        story.append(Paragraph("ShadowPacketGuard Traffic &amp; Threat Report", title_style))
+        story.append(Paragraph("Real-Time Network Packet Analysis and Threat Detection Platform", normal))
         story.append(Paragraph(f"Session: {session_id}", normal))
         story.append(Paragraph(f"Generated: {datetime.now(timezone.utc):%Y-%m-%d %H:%M UTC}", normal))
         story.append(Spacer(1, 0.6 * cm))
