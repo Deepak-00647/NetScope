@@ -19,10 +19,18 @@ WELL_KNOWN_PORTS = {
 class PacketParser:
     """Turns a raw sniffed packet into structured metadata."""
 
+    @staticmethod
+    def _capture_timestamp(raw_packet):
+        """Return the packet's capture time in UTC, not the parse time."""
+        try:
+            return datetime.fromtimestamp(float(raw_packet.time), tz=timezone.utc)
+        except (AttributeError, TypeError, ValueError, OSError):
+            return datetime.now(timezone.utc)
+
     def parse(self, raw_packet, interface: str) -> dict | None:
         try:
             record = {
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": self._capture_timestamp(raw_packet),
                 "interface": interface,
                 "protocol": "UNKNOWN",
                 "src_ip": None,
