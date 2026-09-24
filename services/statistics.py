@@ -1,6 +1,8 @@
 """
 Aggregate statistics computed from stored packets for a given session.
 """
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import func
 from models import db, Packet
 
@@ -14,10 +16,12 @@ class StatisticsService:
         avg_size = base.with_entities(func.avg(Packet.packet_size)).scalar() or 0
         total_bytes = base.with_entities(func.sum(Packet.packet_size)).scalar() or 0
 
-        first_ts = base.with_entities(func.min(Packet.timestamp)).scalar()
-        last_ts = base.with_entities(func.max(Packet.timestamp)).scalar()
-        duration = (last_ts - first_ts).total_seconds() if first_ts and last_ts else 0
-        pps = (total_packets / duration) if duration > 0 else 0
+        # Packets/sec is a live rate, not the lifetime average. Looking at a
+        # short rolling window makes the dashboard react to current traffic.
+        window_start = datetime.now(timezone.utc) - timedelta(seconds=5)
+        recent = base.filter(Packet.timestamp >= window_start)
+        recent_count = recent.count()
+        pps = recent_count / 5.0
 
         return {
             "total_packets": total_packets,
@@ -75,7 +79,7 @@ class StatisticsService:
 
     @staticmethod
     def packet_rate_timeseries(session_id: str) -> list[dict]:
-        """Packets per second-bucket, for the line chart."""
+        """Packets per second-bucket, for the live line chart."""
         rows = (
             db.session.query(
                 func.strftime("%Y-%m-%d %H:%M:%S", Packet.timestamp).label("bucket"),
