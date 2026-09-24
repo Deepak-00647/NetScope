@@ -138,7 +138,17 @@ class PacketCaptureEngine:
                 time.sleep(0.2)
             if self._stop_event.is_set():
                 return
-            record = self.parser.parse(pkt, self.session.interface)
+
+            # Capture the application's local observation time at the exact
+            # point the live callback receives the packet. This avoids the
+            # timezone/epoch differences seen with some Windows/Npcap builds.
+            # The parser normalizes this value to UTC before database storage.
+            captured_at = datetime.now(timezone.utc)
+            record = self.parser.parse(
+                pkt,
+                self.session.interface,
+                captured_at=captured_at,
+            )
             if record is None:
                 return
             stored = self.storage.add(self.session.session_id, record)
