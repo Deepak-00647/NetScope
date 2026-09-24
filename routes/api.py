@@ -67,7 +67,13 @@ def stats():
     sid = _session_id()
     if not sid:
         return jsonify({
-            "summary": {"total_packets": 0, "average_packet_size": 0, "total_bytes": 0, "packets_per_second": 0},
+            "summary": {
+                "total_packets": 0,
+                "average_packet_size": 0,
+                "total_bytes": 0,
+                "packets_per_second": 0,
+                "bandwidth_bytes_per_second": 0,
+            },
             "protocol_distribution": [], "top_source_ips": [], "top_destination_ips": [],
             "top_ports": [], "packet_rate_timeseries": [], "session_id": None,
         })
